@@ -1,0 +1,10 @@
+Flask==1.1.1
+Flask-JWT==0.2.0
+Flask-JWT-Extended==4.2.3
+Flask-Cors==3.0.10
+marshmallow==3.12.1
+marshmallow-sqlalchemy==0.25.0
+Flask-SQLAlchemy==2.5.1
+SQLAlchemy==1.4.15
+py==1.10.0
+PyJWT==2.1.0

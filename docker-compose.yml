@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+
+  nginx:
+    image: nginx
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/index.html:/app/html:ro
+  
+  rabbitmq:
+    image: 'rabbitmq:3.6-management-alpine'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+
+  securityms:
+    build: securityms
+    volumes:
+      - ./securityms:/app
+  
+  converterms:
+    build: converterms
+    volumes:
+      - ./converterms:/app
+      - ./Files:/app/Files
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - rabbitmq
+
+  gestor-tareas:
+    build: ./gestor_tareas/
+    volumes:
+      - ./gestor_tareas:/app
+      - ./Files:/app/Files
+    environment:
+      FLASK_ENV: development
