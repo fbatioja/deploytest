@@ -11,9 +11,10 @@ app = Celery('tasks',
 
 
 @app.task()
-def convert_task(x):
-    logger.info('Got Request - Starting work ')
+def convert_task(filename, newFormat):
+    logger.info(f'Got Request - Starting work {filename}, {newFormat}')
     time.sleep(4)
     logger.info('Work Finished ')
-    requests.post('http://gestor-tareas:5000/updateTask',json={'nombre': "prueba"})
+
+    #requests.post('http://gestor-tareas:5000/updateTask',json={'nombre': "prueba"})
     return x

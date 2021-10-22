@@ -59,7 +59,7 @@ def postAuth():
         return "User doesn't exists", 404
     else:
         additional_claims = {"email": user.email}
-        access_token = create_access_token(identity = user.id, additional_claims=additional_claims)
+        access_token = create_access_token(identity = {"id": user.id, "email": user.email}, additional_claims=additional_claims)
         return {"message": "Sucessfull login", "token": access_token,"user": usuario_schema.dump(user)}
 
 @app.route('/validate', methods = ['GET'])
