@@ -13,24 +13,18 @@ services:
   
   rabbitmq:
     image: 'rabbitmq:3.6-management-alpine'
+    hostname: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=mypass
     ports:
-      - '5672:5672'
-      - '15672:15672'
+      - "15672:15672"
+      - "5672:5672"
 
   securityms:
     build: securityms
     volumes:
       - ./securityms:/app
-  
-  converterms:
-    build: converterms
-    volumes:
-      - ./converterms:/app
-      - ./Files:/app/Files
-    environment:
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      - rabbitmq
 
   gestor-tareas:
     build: ./gestor_tareas/
@@ -39,3 +33,14 @@ services:
       - ./Files:/app/Files
     environment:
       FLASK_ENV: development
+    depends_on:
+      - rabbitmq
+  
+  converter-worker:
+    build: './converter-worker'
+    user: nobody
+    depends_on:
+      - rabbitmq
+      - gestor-tareas
+    volumes:
+      - ./Files:/app/Files
