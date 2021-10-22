@@ -23,32 +23,41 @@ class VistaTasks(Resource):
 
     @jwt_required()
     def post(self):
+        # Get user data
         userIdentity = get_jwt_identity()
         userEmail = userIdentity["email"]
-        userId=userIdentity["id"]
+        userId = userIdentity["id"]
         tiempo = round(time.time() * 1000)
-        nueva_task = Task(filename=request.form.get("filename"),
-                          newFormat=request.form.get("newFormat"),
-                          timeCreated=tiempo, 
-                          status="UPLOADED",
-                          userEmail=userEmail)
         file = request.files['file']
-        db.session.add(nueva_task)
-        db.session.commit()
+        try:
+            if not os.path.exists(f"./Files/{userId}"):
+                os.mkdir(f"./Files/{userId}/")
+            file_location = f"./Files/{userId}/{file.filename}"
+            with open(file_location, "wb+") as file_save:
+                file_save.write(file.read())
 
-        if not os.path.exists(f"./Files/{userId}"):
-            os.mkdir(f"./Files/{userId}/")
-        file_location = f"./Files/{userId}/original-_-_{tiempo}-_-_{file.filename}"
-        with open(file_location, "wb+") as file_save:
-            file_save.write(file.read())
-        
-        r = celery_app.send_task('tasks.convert_task',
-                                 kwargs={'filename': f"./Files/{userId}/{nueva_task.id}/{file.filename}", "newFormat": request.form.get("newFormat")})
-        return {"task": task_schema.dump(nueva_task), "cola": r.id}, 200
+            nueva_task = Task(filename=file.filename,
+                              newFormat=request.form.get("newFormat"),
+                              timeCreated=tiempo,
+                              status="UPLOADED",
+                              userEmail=userEmail)
+            db.session.add(nueva_task)
+            db.session.commit()
+            r = celery_app.send_task('tasks.convert_task',
+                                     kwargs={
+                                         'filename': file.filename,
+                                         "newFormat": request.form.get("newFormat"),
+                                         "userId": userId})
+            return {"task": task_schema.dump(nueva_task), "cola": r.id}, 200
+        except:
+
+            return "Ocurrió un error al guardar el archivo", 400
+
 
 class VistaGetFiles(Resource):
     def get(self):
         return "ok"
+
 
 class VistaUpdateTask(Resource):
     def post(self):
