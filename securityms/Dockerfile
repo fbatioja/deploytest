@@ -12,6 +12,4 @@ RUN pip3 install pika && \
 
 COPY . /app
 EXPOSE 5000
-ENTRYPOINT [ "python3" ]
-
-CMD [ "app.py" ]
+ENTRYPOINT ["./gunicorn.sh"]
