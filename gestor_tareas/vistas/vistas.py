@@ -1,18 +1,26 @@
 from os import path
-from flask import request
+from flask import request, send_file
 from flask_restful import Resource
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from ..modelos import db, Task, TaskSchema
 from celery import Celery
-import json
 import os
 import time
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
 celery_app = Celery('gestor',
                     broker='amqp://admin:mypass@rabbitmq:5672',
                     backend='rpc://')
+
+smtp_server = "smtp.gmail.com"
+port = 587
+sender_email = "@gmail.com"
+password = ""
 
 
 class VistaTasks(Resource):
@@ -47,20 +55,68 @@ class VistaTasks(Resource):
                                      kwargs={
                                          'filename': file.filename,
                                          "newFormat": request.form.get("newFormat"),
-                                         "userId": userId})
+                                         "userId": userId,
+                                         "taskId": nueva_task.id})
             return {"task": task_schema.dump(nueva_task), "cola": r.id}, 200
         except:
-
             return "Ocurrió un error al guardar el archivo", 400
 
 
 class VistaGetFiles(Resource):
-    def get(self):
-        return "ok"
+    @jwt_required()
+    def get(self, filename):
+        userIdentity = get_jwt_identity()
+        userId = userIdentity["id"]
+        #return "ok"
+        return send_file(f"./Files/{userId}/Audio.mp3", mimetype=str(filename)[-3:], attachment_filename="Audio.mp3", as_attachment=True)
 
 
 class VistaUpdateTask(Resource):
     def post(self):
-        f = open("demofile3.txt", "a")
-        f.write("Algo")
-        f.close()
+        task = Task.query.get_or_404(request.json["taskId"])
+        task.status = "PROCESSED"
+        db.session.commit()
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Archivo procesado"
+        message["From"] = sender_email
+        message["To"] = task.userEmail
+
+        newFile = task.filename[:-3] + str(task.newFormat)[-3:]
+
+        text = f"""\
+            Tu archivo está listo
+            Hola,
+            Nos alegra informarte que tu archivo {task.filename} se convirtió exitosamente.
+            Para descargar tu archivo accede a la aplicación y solicita el archivo {newFile}.
+            Grácias por preferirnos - Grupo 18"""
+
+        html = f"""\
+            <html>
+                <body>
+                    <h2>Tu archivo está listo</h2>
+                        <p>
+                            Hola...<br>
+                            Nos alegra informarte que tu archivo <b>{task.filename}</b> se convirtió exitosamente.<br>
+                            Para descargar tu archivo accede a la aplicación y solicita el archivo <b>{newFile}</b>.<br><br>
+                            <i>Grácias por preferirnos - Grupo 18</i>
+                        </p>
+                    </body>
+                </html>
+            """
+
+        part1 = MIMEText(text, "plain")
+        part2 = MIMEText(html, "html")
+
+        message.attach(part1)
+        message.attach(part2)
+
+        try:
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+                server.login(sender_email, password)
+                server.sendmail(
+                    sender_email, task.userEmail, message.as_string()
+                )
+                server.quit()
+        except Exception as e:
+            print(e)
