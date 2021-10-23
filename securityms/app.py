@@ -44,12 +44,16 @@ usuario_schema = UsuarioSchema()
 @app.route('/signup', methods = ['POST'])
 def post():
     new_user = User(username=request.json["username"], password=request.json["password"], email=request.json["email"])
-    db.session.add(new_user)
-    db.session.commit()
-    # return usuario_schema.dump(nuevo_usuario)
-    additional_claims = {"email": new_user.email}
-    access_token = create_access_token(identity = new_user.id, additional_claims= additional_claims)
-    return {"message": "User created sucessfully", "token": access_token}
+    user = User.query.filter(User.email == new_user.email).first()
+    if user is None:
+        db.session.add(new_user)
+        db.session.commit()
+        # return usuario_schema.dump(nuevo_usuario)
+        additional_claims = {"email": new_user.email}
+        access_token = create_access_token(identity = {"id": user.id, "email": user.email}, additional_claims= additional_claims)
+        return {"message": "User created sucessfully", "token": access_token}
+    else:
+        return {"message": "User with email {} is already created".format(new_user.email)}
 
 @app.route('/login', methods = ['POST'])
 def postAuth():

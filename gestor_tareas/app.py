@@ -1,7 +1,7 @@
 from . import create_app
 from flask_restful import Api
 
-from .vistas import VistaTasks, VistaUpdateTask, VistaGetFiles
+from .vistas import VistaTasks, VistaUpdateTask, VistaGetFiles, VistaTask
 from .modelos import db
 from flask_jwt_extended import JWTManager
 
@@ -17,6 +17,7 @@ def create_tables():
 
 api = Api(app)
 api.add_resource(VistaTasks, '/tasks')
+api.add_resource(VistaTask, '/tasks/<int:id_task>')
 api.add_resource(VistaUpdateTask, '/updateTask')
 api.add_resource(VistaGetFiles, '/tasks/<filename>')
 

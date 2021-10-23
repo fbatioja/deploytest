@@ -11,6 +11,7 @@ import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
 celery_app = Celery('gestor',
@@ -19,14 +20,15 @@ celery_app = Celery('gestor',
 
 smtp_server = "smtp.gmail.com"
 port = 587
-sender_email = "@gmail.com"
+sender_email = "fileconvertergrupo18@gmail.com"
 password = ""
 
 
 class VistaTasks(Resource):
     @jwt_required()
     def get(self):
-        tasks = Task.query.all()
+        jwtHeader = get_jwt()
+        tasks = Task.query.filter(Task.userEmail == jwtHeader["email"])
         return {"tasks": tasks_schema.dump(tasks, many=True)}, 200
 
     @jwt_required()
@@ -70,6 +72,19 @@ class VistaGetFiles(Resource):
         #return "ok"
         return send_file(f"./Files/{userId}/Audio.mp3", mimetype=str(filename)[-3:], attachment_filename="Audio.mp3", as_attachment=True)
 
+
+class VistaTask(Resource):
+    @jwt_required()
+    def get(self, id_task):
+        jwtHeader = get_jwt()
+        task = Task.query.filter_by(id=id_task, userEmail=jwtHeader["email"])
+        if task is None:
+            return None, 404
+
+        return tasks_schema.dump(task), 200
+
+    def put(self, id_task):
+        pass
 
 class VistaUpdateTask(Resource):
     def post(self):
