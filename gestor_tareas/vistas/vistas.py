@@ -69,8 +69,10 @@ class VistaGetFiles(Resource):
     def get(self, filename):
         userIdentity = get_jwt_identity()
         userId = userIdentity["id"]
+        if not os.path.exists(f"./Files/{userId}/{filename}"):
+            return "El archivo no existe", 404
         #return "ok"
-        return send_file(f"./Files/{userId}/Audio.mp3", mimetype=str(filename)[-3:], attachment_filename="Audio.mp3", as_attachment=True)
+        return send_file(f"./Files/{userId}/{filename}", mimetype=str(filename)[-3:], attachment_filename="{filename}", as_attachment=True)
 
 
 class VistaTask(Resource):

@@ -50,7 +50,7 @@ def post():
         db.session.commit()
         # return usuario_schema.dump(nuevo_usuario)
         additional_claims = {"email": new_user.email}
-        access_token = create_access_token(identity = {"id": user.id, "email": user.email}, additional_claims= additional_claims)
+        access_token = create_access_token(identity = {"id": new_user.id, "email": new_user.email}, additional_claims= additional_claims)
         return {"message": "User created sucessfully", "token": access_token}
     else:
         return {"message": "User with email {} is already created".format(new_user.email)}
