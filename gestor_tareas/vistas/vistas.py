@@ -2,7 +2,7 @@ from os import path
 from flask import request, send_file
 from flask_restful import Resource
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from ..modelos import db, Task, TaskSchema
+from ..modelos import db, Task, TaskSchema, Status
 from celery import Celery
 import os
 import time
@@ -23,6 +23,8 @@ port = 587
 sender_email = "fileconvertergrupo18@gmail.com"
 password = ""
 
+def get_target_name(task):
+    return os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
 
 class VistaTasks(Resource):
     @jwt_required()
@@ -63,6 +65,20 @@ class VistaTasks(Resource):
         except:
             return "Ocurrió un error al guardar el archivo", 400
 
+def remove_file(path_complete):  
+        print(path_complete)      
+        if os.path.exists(path_complete):
+            try:
+                os.remove(path_complete)
+                return "OK"
+            except PermissionError:
+                return "You do not have permission to delete that"
+            except OSError as error:
+                print(error)
+                return "File path can not be removed"
+        else:
+            return "The file does not exist"
+
 
 class VistaGetFiles(Resource):
     @jwt_required()
@@ -85,8 +101,75 @@ class VistaTask(Resource):
 
         return tasks_schema.dump(task), 200
 
+    @jwt_required()
     def put(self, id_task):
-        pass
+        # Get user data
+        userIdentity = get_jwt_identity()
+        userEmail = userIdentity["email"]
+        userId = userIdentity["id"]
+
+        task = Task.query.filter_by(id=id_task, userEmail=userEmail).first()
+        if task is None:
+            return None, 404
+
+
+        if task.status != Status.PROCESSED:
+            return "The task is not processed", 500
+
+        newFormat = request.json.get("newFormat")
+        oldTarget = get_target_name(task)
+        task.newFormat = newFormat  # Actualiza el formato de la tarea
+        db.session.commit()
+        location = f"./Files/{userId}/"
+        if task.status == Status.PROCESSED:
+            try:
+                path_complete = os.path.join(location, oldTarget)
+                response = remove_file(path_complete)
+            except FileNotFoundError:
+                pass
+
+            task.status = Status.UPLOADED
+            db.session.commit()
+
+        r = celery_app.send_task('tasks.convert_task',
+                                 kwargs={
+                                     'filename': task.filename,
+                                     "newFormat": newFormat,
+                                     "userId": userId,
+                                     "taskId": task.id})
+        return tasks_schema.dump([task]), 200
+
+    @jwt_required()
+    def delete(self, id_task):
+        # Get user data
+        userIdentity = get_jwt_identity()
+        userEmail = userIdentity["email"]
+        userId = userIdentity["id"]
+
+        task = Task.query.filter_by(id=id_task, userEmail=userEmail).first()
+        if task is None:
+            return None, 404
+
+
+        if task.status != Status.PROCESSED:
+            return "The task is not processed", 500
+
+        location = f"./Files/{userId}/"
+        fileoriginal = task.filename
+        fileprocessed = os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
+        path_complete = os.path.join(location, fileoriginal)
+        response = remove_file(path_complete)
+        if response != "OK":
+            return response, 500
+
+        path_complete = os.path.join(location, fileprocessed)
+        response = remove_file(path_complete)
+        if response != "OK":
+            return response, 500
+
+        Task.query.filter_by(id=id_task, userEmail=userEmail).delete()
+        db.session.commit()
+        return 'Tarea eliminada', 200
 
 class VistaUpdateTask(Resource):
     def post(self):
