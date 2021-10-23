@@ -4,6 +4,9 @@ services:
 
   nginx:
     image: nginx
+    depends_on:
+      - securityms
+      - gestor-tareas
     ports:
       - "8080:8080"
     volumes:

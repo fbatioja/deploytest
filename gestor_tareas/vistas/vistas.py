@@ -2,7 +2,7 @@ from os import path
 from flask import request, send_file
 from flask_restful import Resource
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from ..modelos import db, Task, TaskSchema, Status
+from modelos import db, Task, TaskSchema, Status
 from celery import Celery
 import os
 import time
