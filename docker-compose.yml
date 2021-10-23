@@ -36,7 +36,7 @@ services:
   
   converter-worker:
     build: './converter-worker'
-    user: nobody
+    user: root
     depends_on:
       - rabbitmq
       - gestor-tareas

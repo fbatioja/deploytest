@@ -6,11 +6,11 @@ from enum import Enum
 db = SQLAlchemy()
 
 class Formatos(Enum):
-    MP3 = 1
-    AAC = 2
-    OGG = 3
-    WAV = 4
-    WMA = 5
+    mp3 = 1
+    aac = 2
+    ogg = 3
+    wav = 4
+    wma = 5
 
 class Status(Enum):
     UPLOADED = 1

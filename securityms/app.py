@@ -50,7 +50,7 @@ def post():
         db.session.commit()
         # return usuario_schema.dump(nuevo_usuario)
         additional_claims = {"email": new_user.email}
-        access_token = create_access_token(identity = new_user.id, additional_claims= additional_claims)
+        access_token = create_access_token(identity = {"id": user.id, "email": user.email}, additional_claims= additional_claims)
         return {"message": "User created sucessfully", "token": access_token}
     else:
         return {"message": "User with email {} is already created".format(new_user.email)}
@@ -63,7 +63,7 @@ def postAuth():
         return "User doesn't exists", 404
     else:
         additional_claims = {"email": user.email}
-        access_token = create_access_token(identity = user.id, additional_claims=additional_claims)
+        access_token = create_access_token(identity = {"id": user.id, "email": user.email}, additional_claims=additional_claims)
         return {"message": "Sucessfull login", "token": access_token,"user": usuario_schema.dump(user)}
 
 @app.route('/validate', methods = ['GET'])

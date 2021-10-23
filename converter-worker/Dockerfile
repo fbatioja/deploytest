@@ -1,13 +1,18 @@
-FROM python:3.8-slim
+FROM ubuntu:18.04
 
-# layer caching for faster builds
-COPY requirements.txt /
-RUN pip install -r /requirements.txt
+run apt update && \
+    apt install -y python3-pip python3-dev && \
+    apt -y install ffmpeg
 
-#COPY app.py /app.py
-ADD . /app
+COPY ./requirements.txt /app/requirements.txt
+
 WORKDIR /app
 
+RUN pip3 install -r requirements.txt
+
+COPY . /app
+
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
 ENTRYPOINT celery -A tasks worker --loglevel=info
-#-Q celery_worker
-#ENTRYPOINT ['celery','-A','test_celery', 'worker', '--loglevel=info']
