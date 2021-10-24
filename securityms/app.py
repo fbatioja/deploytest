@@ -30,12 +30,13 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50))
     password = db.Column(db.String(50))
+    password2 = db.Column(db.String(50))
     email = db.Column(db.String(50))
 
 class UsuarioSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = User
-        exclude = ('password',)
+        exclude = ('password', 'password2')
         include_relationships = True
         load_instance = True
 
@@ -43,15 +44,17 @@ usuario_schema = UsuarioSchema()
 
 @app.route('/signup', methods = ['POST'])
 def post():
-    new_user = User(username=request.json["username"], password=request.json["password"], email=request.json["email"])
+    new_user = User(username=request.json["username"], password=request.json["password"], password2=request.json["password2"], email=request.json["email"])
     user = User.query.filter(User.email == new_user.email).first()
     if user is None:
-        db.session.add(new_user)
-        db.session.commit()
-        # return usuario_schema.dump(nuevo_usuario)
-        additional_claims = {"email": new_user.email}
-        access_token = create_access_token(identity = {"id": new_user.id, "email": new_user.email}, additional_claims= additional_claims)
-        return {"message": "User created sucessfully", "token": access_token}
+        if new_user.password == new_user.password2:
+            db.session.add(new_user)
+            db.session.commit()
+            additional_claims = {"email": new_user.email}
+            access_token = create_access_token(identity = {"id": new_user.id, "email": new_user.email}, additional_claims= additional_claims)
+            return {"message": "User created sucessfully", "token": access_token}
+        else:
+            return {"message": "Password and password2 fields doesn't match, please correct it and try again"}
     else:
         return {"message": "User with email {} is already created".format(new_user.email)}
 
