@@ -115,10 +115,6 @@ class VistaTask(Resource):
         if task is None:
             return None, 404
 
-
-        if task.status != Status.PROCESSED:
-            return "The task is not processed", 500
-
         newFormat = request.json.get("newFormat")
         oldTarget = get_target_name(task)
         task.newFormat = newFormat  # Actualiza el formato de la tarea
