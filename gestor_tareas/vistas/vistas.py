@@ -40,7 +40,7 @@ class VistaTasks(Resource):
         userIdentity = get_jwt_identity()
         userEmail = userIdentity["email"]
         userId = userIdentity["id"]
-        tiempo = round(time.time() * 1000)
+        tiempo = round(time.time())
         file = request.files['file']
         try:
             if not os.path.exists(f"./Files/{userId}"):
@@ -61,7 +61,8 @@ class VistaTasks(Resource):
                                          'filename': file.filename,
                                          "newFormat": request.form.get("newFormat"),
                                          "userId": userId,
-                                         "taskId": nueva_task.id})
+                                         "taskId": nueva_task.id,
+                                         "timecreated": tiempo})
             return {"task": task_schema.dump(nueva_task), "cola": r.id}, 200
         except:
             return "Ocurrió un error al guardar el archivo", 400
@@ -105,6 +106,7 @@ class VistaTask(Resource):
     @jwt_required()
     def put(self, id_task):
         # Get user data
+        tiempo = round(time.time())
         userIdentity = get_jwt_identity()
         userEmail = userIdentity["email"]
         userId = userIdentity["id"]
@@ -137,7 +139,8 @@ class VistaTask(Resource):
                                      'filename': task.filename,
                                      "newFormat": newFormat,
                                      "userId": userId,
-                                     "taskId": task.id})
+                                     "taskId": task.id,
+                                     "timecreated": tiempo})
         return tasks_schema.dump([task]), 200
 
     @jwt_required()

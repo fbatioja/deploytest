@@ -13,9 +13,15 @@ app = Celery('tasks',
 
 
 @app.task()
-def convert_task(filename, newFormat, userId, taskId):
+def convert_task(filename, newFormat, userId, taskId, timecreated):
+    timestart = round(time.time())
+    diff = timestart - timecreated
     logger.info(f'Solicitud de conversión - {filename} a {newFormat}')
     resp = convert_validation(filename, newFormat, userId)
+    timeend = round(time.time())
+    file = open('./Files/loglectura.txt', 'a')
+    file.write("{},{},{},{}\n".format(timecreated, timestart, diff, timeend))
+    file.close()
     if resp:
         logger.info(f"Conversión de archvio {filename} a {newFormat}")
         requests.post('http://gestor-tareas:5000/updateTask',json={"taskId": taskId})
