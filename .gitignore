@@ -34,3 +34,5 @@ htmlcov/
 *.aac
 
 /converter-worker/ven/
+.vs/
+.vs/slnx.sqlite
