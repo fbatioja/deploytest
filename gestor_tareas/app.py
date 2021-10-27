@@ -3,11 +3,12 @@ from flask_restful import Api
 from vistas import VistaTasks, VistaUpdateTask, VistaGetFiles, VistaTask
 from modelos import db
 from flask_jwt_extended import JWTManager
+import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gestor-tareas.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'agilemates-jwt'
+app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
 app_context = app.app_context()
 app_context.push()

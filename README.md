@@ -15,3 +15,8 @@ docker-compose build
 docker-compose up
 ```
 
+## Levantamient de archivo docker-compose 
+
+```
+docker-compose -f <file_name.yml> up
+```

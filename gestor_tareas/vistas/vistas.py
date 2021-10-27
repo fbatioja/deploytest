@@ -15,14 +15,20 @@ from email.mime.multipart import MIMEMultipart
 
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
+
+smtp_server = os.environ["SMTP_EMAIL_SERVER"]
+smt_port = int(os.environ["SMTP_EMAIL_PORT"])
+sender_email = os.environ["SMTP_EMAIL_SENDER_EMAIL"]
+password = os.environ["SMTP_EMAIL_SENDER_PASSWORD"]
+
+rabbit_user = os.environ["RABBITMQ_DEFAULT_USER"]
+rabbit_password = os.environ["RABBITMQ_DEFAULT_PASS"]
+rabbit_hostname = os.environ["RABBITMQ_HOSTNAME"]
+
 celery_app = Celery('gestor',
-                    broker='amqp://admin:mypass@rabbitmq:5672',
+                    broker=f"amqp://{rabbit_user}:{rabbit_password}@{rabbit_hostname}:5672",
                     backend='rpc://')
 
-smtp_server = "smtp.gmail.com"
-port = 587
-sender_email = "fileconvertergrupo18@gmail.com"
-password = ""
 
 def get_target_name(task):
     return os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
@@ -212,7 +218,7 @@ class VistaUpdateTask(Resource):
 
         try:
             context = ssl.create_default_context()
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            with smtplib.SMTP_SSL(smtp_server, smt_port, context=context) as server:
                 server.login(sender_email, password)
                 server.sendmail(
                     sender_email, task.userEmail, message.as_string()

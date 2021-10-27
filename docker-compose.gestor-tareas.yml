@@ -38,14 +38,3 @@ services:
       - system.env
     depends_on:
       - rabbitmq
-  
-  converter-worker:
-    build: './converter-worker'
-    user: root
-    depends_on:
-      - rabbitmq
-      - gestor-tareas
-    volumes:
-      - ./Files:/app/Files
-    env_file:
-      - system.env

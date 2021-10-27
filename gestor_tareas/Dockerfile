@@ -19,4 +19,8 @@ RUN pip --no-cache-dir install -r requirements.txt
 
 EXPOSE 5000
 
+#Production
 ENTRYPOINT ["./gunicorn.sh"]
+
+#Development
+#CMD ["flask", "run"]

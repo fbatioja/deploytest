@@ -3,12 +3,16 @@ from celery import Celery
 from celery.utils.log import get_task_logger
 import requests
 from pydub import AudioSegment
-import ffmpeg
+import os
 
 logger = get_task_logger(__name__)
 
+rabbit_user = os.environ["RABBITMQ_DEFAULT_USER"]
+rabbit_password = os.environ["RABBITMQ_DEFAULT_PASS"]
+rabbit_hostname = os.environ["RABBITMQ_HOSTNAME"]
+
 app = Celery('tasks',
-             broker='amqp://admin:mypass@rabbitmq:5672',
+             broker=f"amqp://{rabbit_user}:{rabbit_password}@{rabbit_hostname}:5672",
              backend='rpc://')
 
 
