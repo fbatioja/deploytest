@@ -8,8 +8,18 @@ from flask_sqlalchemy import SQLAlchemy
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 import os
 
-app = Flask(__name__)  
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///security.db'
+app = Flask(__name__)
+
+dbHost = os.environ.get("DB_HOST")
+dbNameSecurityms = os.environ.get("DB_NAME_SECURITYMS")
+dbUser = os.environ.get("DB_USER")
+dbPassword = os.environ.get("DB_PASSWORD")
+
+if not dbHost:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///security.db'
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameSecurityms}"
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
