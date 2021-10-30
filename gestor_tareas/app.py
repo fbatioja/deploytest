@@ -13,10 +13,10 @@ dbUser = os.environ.get("DB_USER")
 dbPassword = os.environ.get("DB_PASSWORD")
 
 if not dbHost:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gestor-tareas.db'
+    app.config['SQL_ALCHEMY_DATABASE_URI'] = 'sqlite:///gestor-tareas.db'
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameGestorTareas}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQL_ALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameGestorTareas}"
+#app.config['SQL_ALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
 app_context = app.app_context()
