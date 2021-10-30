@@ -1,5 +1,5 @@
 .DS_Store
-system.env
+.env
 .flaskenv
 *.pyc
 *.pyo

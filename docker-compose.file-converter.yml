@@ -7,4 +7,4 @@ services:
     volumes:
       - ./Files:/app/Files
     env_file:
-      - system.env
+      - .env

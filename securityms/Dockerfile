@@ -1,21 +1,26 @@
-FROM ubuntu:18.04
+FROM python:3.7-alpine
 
-RUN apt-get update -y && \
-    apt-get install -y python3-pip python3-dev
+RUN apk add --no-cache gcc musl-dev linux-headers\
+    && pip install --upgrade pip
 
-COPY ./requirements.txt /app/requirements.txt
+RUN apk add build-base
 
 WORKDIR /app
 
-RUN pip3 install pika && \
-    pip3 install -r requirements.txt
+ENV FLASK_APP=app.py
 
-COPY . /app
+ENV FLASK_RUN_HOST=0.0.0.0
+
+COPY requirements.txt requirements.txt
+
+COPY . .
+
+RUN pip --no-cache-dir install -r requirements.txt
+
 EXPOSE 5000
 
-#En producción
+#Production
 ENTRYPOINT ["./gunicorn.sh"]
 
-#En desarrollo
-#ENTRYPOINT [ "python3" ]
-#CMD [ "app.py" ]
+#Development
+#CMD ["flask", "run"]
