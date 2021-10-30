@@ -8,9 +8,24 @@ from flask_sqlalchemy import SQLAlchemy
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 import os
 
-app = Flask(__name__)  
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///security.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app = Flask(__name__)
+
+dbHost = os.environ.get("DB_HOST")
+dbNameSecurityms = os.environ.get("DB_NAME_SECURITYMS")
+dbUser = os.environ.get("DB_USER")
+dbPassword = os.environ.get("DB_PASSWORD")
+
+app.logger.info(dbHost)
+app.logger.info(dbNameSecurityms)
+app.logger.info(dbUser)
+app.logger.info(dbPassword)
+
+if not dbHost:
+    app.config['SQL_ALCHEMY_DATABASE_URI'] = 'sqlite:///security.db'
+else:
+    app.config['SQL_ALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameSecurityms}"
+
+#app.config['SQL_ALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
 

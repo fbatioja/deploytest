@@ -6,8 +6,17 @@ from flask_jwt_extended import JWTManager
 import os
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gestor-tareas.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+dbHost = os.environ.get("DB_HOST")
+dbNameGestorTareas = os.environ.get("DB_NAME_GESTORTAREAS")
+dbUser = os.environ.get("DB_USER")
+dbPassword = os.environ.get("DB_PASSWORD")
+
+if not dbHost:
+    app.config['SQL_ALCHEMY_DATABASE_URI'] = 'sqlite:///gestor-tareas.db'
+else:
+    app.config['SQL_ALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameGestorTareas}"
+#app.config['SQL_ALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
 app_context = app.app_context()

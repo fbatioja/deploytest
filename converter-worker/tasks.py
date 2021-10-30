@@ -10,6 +10,7 @@ logger = get_task_logger(__name__)
 rabbit_user = os.environ["RABBITMQ_DEFAULT_USER"]
 rabbit_password = os.environ["RABBITMQ_DEFAULT_PASS"]
 rabbit_hostname = os.environ["RABBITMQ_HOSTNAME"]
+gestor_tareas_host = os.environ["GESTOR_TAREAS_HOST"]
 
 app = Celery('tasks',
              broker=f"amqp://{rabbit_user}:{rabbit_password}@{rabbit_hostname}:5672",
@@ -28,7 +29,7 @@ def convert_task(filename, newFormat, userId, taskId, timecreated):
     file.close()
     if resp:
         logger.info(f"Conversión de archvio {filename} a {newFormat}")
-        requests.post('http://gestor-tareas:5000/updateTask',json={"taskId": taskId})
+        requests.post(f"{gestor_tareas_host}/updateTask",json={"taskId": taskId})
 
 def convert_validation(filename, newFormat, userId):
     filenameSplit = filename.split(".")
