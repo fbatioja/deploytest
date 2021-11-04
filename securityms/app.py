@@ -52,10 +52,6 @@ db.create_all()
 cors = CORS(app)
 jwt = JWTManager(app)
 
-#@app.before_first_request
-#def create_tables():
-#    db.create_all()
-
 usuario_schema = UsuarioSchema()
 
 @app.route('/signup', methods = ['POST'])
