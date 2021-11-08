@@ -22,7 +22,6 @@ app.logger.info(dbUser)
 app.logger.info(dbPassword)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameSecurityms}"
-
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
@@ -44,7 +43,6 @@ class UsuarioSchema(SQLAlchemyAutoSchema):
         exclude = ('password', 'password2')
         include_relationships = True
         load_instance = True
-
 
 db.init_app(app)
 db.create_all()
