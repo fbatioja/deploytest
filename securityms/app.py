@@ -20,27 +20,14 @@ app.logger.info(dbNameSecurityms)
 app.logger.info(dbUser)
 app.logger.info(dbPassword)
 
-if not dbHost:
-    app.config['SQL_ALCHEMY_DATABASE_URI'] = 'sqlite:///security.db'
-else:
-    app.config['SQL_ALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameSecurityms}"
-
-#app.config['SQL_ALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameSecurityms}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
 
 app_context = app.app_context()
 app_context.push()
 db = SQLAlchemy(app)
-
-db.init_app(app)
-
-cors = CORS(app)
-jwt = JWTManager(app)
-
-@app.before_first_request
-def create_tables():
-    db.create_all()
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -55,6 +42,12 @@ class UsuarioSchema(SQLAlchemyAutoSchema):
         exclude = ('password', 'password2')
         include_relationships = True
         load_instance = True
+
+db.init_app(app)
+db.create_all()
+
+cors = CORS(app)
+jwt = JWTManager(app)
 
 usuario_schema = UsuarioSchema()
 
