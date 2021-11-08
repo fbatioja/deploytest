@@ -1,3 +1,4 @@
+
 from flask import Flask, app, request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 from flask_cors import CORS

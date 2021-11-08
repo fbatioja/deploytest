@@ -16,6 +16,7 @@ from email.mime.multipart import MIMEMultipart
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
 
+smtp_enable = os.environ.get('SMTP_enable', False)
 smtp_server = os.environ["SMTP_EMAIL_SERVER"]
 smt_port = int(os.environ["SMTP_EMAIL_PORT"])
 sender_email = os.environ["SMTP_EMAIL_SENDER_EMAIL"]
@@ -182,6 +183,10 @@ class VistaUpdateTask(Resource):
         task = Task.query.get_or_404(request.json["taskId"])
         task.status = "PROCESSED"
         db.session.commit()
+
+        if not smtp_enable:
+            return 'email deshabilitado', 200
+
         message = MIMEMultipart("alternative")
         message["Subject"] = "Archivo procesado"
         message["From"] = sender_email
@@ -226,3 +231,5 @@ class VistaUpdateTask(Resource):
                 server.quit()
         except Exception as e:
             print(e)
+
+        return 'email enviado', 200

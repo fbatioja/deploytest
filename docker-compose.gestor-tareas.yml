@@ -31,6 +31,8 @@ services:
 
   gestor-tareas:
     build: ./gestor_tareas/
+    ports:
+      - "5000:5000"
     volumes:
       - ./gestor_tareas:/app
       - ./Files:/app/Files
