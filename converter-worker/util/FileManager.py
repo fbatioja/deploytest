@@ -34,7 +34,7 @@ class FileManager:
     def send_file(self, destination_path, target_name, userId):
         pass
 
-    def clean_local_files(self, filename, userId):
+    def clean_local_files(self, userId):
         pass
 
     def _get_filename(self, filename, userId):
@@ -79,7 +79,11 @@ class AwsS3(FileManager):
 
     def delete_file(self, filename, userId):
         filename = self._get_filename(filename, userId)
-        self.bucket.delete_key(filename)
+        self.bucket.delete_objects(
+            Delete={
+                'Objects': [{'Key': filename}]
+            }
+        )
 
     def get_file(self, filename, userId):
         filepath = self._get_filename(filename, userId)
@@ -90,8 +94,8 @@ class AwsS3(FileManager):
         return filepath
 
     def send_file(self, filepath, filename, userId):
-        self.save_file(open(filepath), filename, userId)
+        self.save_file(open(filepath, 'rb'), filename, userId)
+        self.clean_local_files(userId)
 
-    def clean_local_files(self, filename, userId):
-        filepath = self._get_filename(filename, userId)
-        shutil.rmtree(os.path.dirname(filepath))
+    def clean_local_files(self, userId):
+        shutil.rmtree(f"./{self.path}/{userId}/")

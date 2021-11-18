@@ -80,8 +80,7 @@ def remove_file(filename, userid):
         return "You do not have permission to delete that"
     except FileNotFoundError:
         return "The file does not exist"
-    except OSError as error:
-        print(error)
+    except OSError:
         return "File path can not be removed"
 
 
@@ -95,10 +94,11 @@ class VistaGetFiles(Resource):
         except FileNotFoundError:
             return "El archivo no existe", 404
 
+        # TODO Cambiar esto para no retornar el archivo, sino la URL del objeto en s3 ¿?
         file = send_file(f"{filepath}", mimetype=str(filename)[-3:], attachment_filename=f"{filename}",
                          as_attachment=True)
 
-        fileManager.clean_local_files(filename, userId)
+        fileManager.clean_local_files(userId)
         return file
 
 
