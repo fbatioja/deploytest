@@ -1,4 +1,3 @@
-from os import path
 from flask import request, send_file
 from flask_restful import Resource
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -12,6 +11,7 @@ import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from util import FileManager
 
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
@@ -30,9 +30,11 @@ celery_app = Celery('gestor',
                     broker=f"amqp://{rabbit_user}:{rabbit_password}@{rabbit_hostname}:5672",
                     backend='rpc://')
 
+fileManager = FileManager.get_instance()
 
 def get_target_name(task):
     return os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
+
 
 class VistaTasks(Resource):
     @jwt_required()
@@ -50,12 +52,7 @@ class VistaTasks(Resource):
         tiempo = round(time.time())
         file = request.files['file']
         try:
-            if not os.path.exists(f"./Files/{userId}"):
-                os.mkdir(f"./Files/{userId}/")
-            file_location = f"./Files/{userId}/{file.filename}"
-            with open(file_location, "wb+") as file_save:
-                file_save.write(file.read())
-
+            fileManager.save_file(file, file.filename, userId)
             nueva_task = Task(filename=file.filename,
                               newFormat=request.form.get("newFormat"),
                               timeCreated=tiempo,
@@ -71,22 +68,21 @@ class VistaTasks(Resource):
                                          "taskId": nueva_task.id,
                                          "timecreated": tiempo})
             return {"task": task_schema.dump(nueva_task), "cola": r.id}, 200
-        except:
+        except Exception:
             return "Ocurrió un error al guardar el archivo", 400
 
-def remove_file(path_complete):  
-        print(path_complete)      
-        if os.path.exists(path_complete):
-            try:
-                os.remove(path_complete)
-                return "OK"
-            except PermissionError:
-                return "You do not have permission to delete that"
-            except OSError as error:
-                print(error)
-                return "File path can not be removed"
-        else:
-            return "The file does not exist"
+
+def remove_file(filename, userid):
+    try:
+        fileManager.delete_file(filename, userid)
+        return "OK"
+    except PermissionError:
+        return "You do not have permission to delete that"
+    except FileNotFoundError:
+        return "The file does not exist"
+    except OSError as error:
+        print(error)
+        return "File path can not be removed"
 
 
 class VistaGetFiles(Resource):
@@ -94,10 +90,16 @@ class VistaGetFiles(Resource):
     def get(self, filename):
         userIdentity = get_jwt_identity()
         userId = userIdentity["id"]
-        if not os.path.exists(f"./Files/{userId}/{filename}"):
+        try:
+            filepath = fileManager.get_file(filename, userId)
+        except FileNotFoundError:
             return "El archivo no existe", 404
-        #return "ok"
-        return send_file(f"./Files/{userId}/{filename}", mimetype=str(filename)[-3:], attachment_filename="{filename}", as_attachment=True)
+
+        file = send_file(f"{filepath}", mimetype=str(filename)[-3:], attachment_filename=f"{filename}",
+                         as_attachment=True)
+
+        fileManager.clean_local_files(filename, userId)
+        return file
 
 
 class VistaTask(Resource):
@@ -126,14 +128,8 @@ class VistaTask(Resource):
         oldTarget = get_target_name(task)
         task.newFormat = newFormat  # Actualiza el formato de la tarea
         db.session.commit()
-        location = f"./Files/{userId}/"
         if task.status == Status.PROCESSED:
-            try:
-                path_complete = os.path.join(location, oldTarget)
-                response = remove_file(path_complete)
-            except FileNotFoundError:
-                pass
-
+            remove_file(oldTarget, userId)
             task.status = Status.UPLOADED
             db.session.commit()
 
@@ -157,26 +153,23 @@ class VistaTask(Resource):
         if task is None:
             return None, 404
 
-
         if task.status != Status.PROCESSED:
             return "The task is not processed", 500
 
-        location = f"./Files/{userId}/"
         fileoriginal = task.filename
         fileprocessed = os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
-        path_complete = os.path.join(location, fileoriginal)
-        response = remove_file(path_complete)
+        response = remove_file(fileoriginal, userId)
         if response != "OK":
             return response, 500
 
-        path_complete = os.path.join(location, fileprocessed)
-        response = remove_file(path_complete)
+        response = remove_file(fileprocessed, userId)
         if response != "OK":
             return response, 500
 
         Task.query.filter_by(id=id_task, userEmail=userEmail).delete()
         db.session.commit()
         return 'Tarea eliminada', 200
+
 
 class VistaUpdateTask(Resource):
     def post(self):
