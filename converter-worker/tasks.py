@@ -62,6 +62,7 @@ def audio_convert(filename, newFormat, userId):
         else:
             AudioSegment.from_file(source_path).export(destination_path, format=newFormat)
     except:
+        fileManager.clean_local_files(userId)
         return False
 
     fileManager.send_file(destination_path, target_name, userId)

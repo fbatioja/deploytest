@@ -80,10 +80,11 @@ class AwsS3(FileManager):
     def __init__(self) -> None:
         self.s3 = boto3.resource('s3')
         self.bucket = self.s3.Bucket(BUCKET)
+        self.s3_client = boto3.client('s3')
 
     def return_file(self, filename, userId):
         key = self._get_filename(filename, userId)
-        return self.s3.generate_presigned_url('get_object',
+        return self.s3_client.generate_presigned_url('get_object',
                                               Params={'Bucket': BUCKET,
                                                       'Key': key},
                                               ExpiresIn=3600)
