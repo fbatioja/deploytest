@@ -1,3 +1,5 @@
+import json
+
 from flask import request, send_file
 from flask_restful import Resource
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -11,7 +13,7 @@ import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from util import FileManager
+from util import FileManager, AwsS3
 
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
@@ -31,6 +33,7 @@ celery_app = Celery('gestor',
                     backend='rpc://')
 
 fileManager = FileManager.get_instance()
+
 
 def get_target_name(task):
     return os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
@@ -90,16 +93,16 @@ class VistaGetFiles(Resource):
         userIdentity = get_jwt_identity()
         userId = userIdentity["id"]
         try:
-            filepath = fileManager.get_file(filename, userId)
-        except FileNotFoundError:
-            return "El archivo no existe", 404
+            response = fileManager.return_file(filename, userId)
+        except:
+            return "Archivo no encontrado", 404
 
-        # TODO Cambiar esto para no retornar el archivo, sino la URL del objeto en s3 ¿?
-        file = send_file(f"{filepath}", mimetype=str(filename)[-3:], attachment_filename=f"{filename}",
-                         as_attachment=True)
-
-        fileManager.clean_local_files(userId)
-        return file
+        if type(fileManager) is AwsS3:
+            return json.dumps({'urlfile': response})
+        else:
+            file = send_file(f"{response}", mimetype=str(filename)[-3:], attachment_filename=f"{filename}",
+                             as_attachment=True)
+            return file
 
 
 class VistaTask(Resource):

@@ -2,7 +2,7 @@ import os
 import pathlib
 import shutil
 from abc import abstractmethod, ABC
-
+from os.path import exists
 import boto3
 import magic
 
@@ -31,6 +31,10 @@ class FileManager:
     def get_file(self, filename, userId):
         pass
 
+    @abstractmethod
+    def return_file(self, filename, userId):
+        pass
+
     def send_file(self, destination_path, target_name, userId):
         pass
 
@@ -50,7 +54,7 @@ class LocalFileManager(FileManager):
 
     def save_file(self, file, filename, userId):
         if not os.path.exists(f"{self.path}/{userId}"):
-            os.mkdir(os.path.join(self.path, userId))
+            os.mkdir(os.path.join(self.path, str(userId)))
 
         filepath = self._get_filename(filename, userId)
         file_location = os.path.join(self.path, filepath)
@@ -64,11 +68,25 @@ class LocalFileManager(FileManager):
         else:
             raise FileNotFoundError
 
+    def return_file(self, filename, userId):
+        filepath = self.get_file(filename, userId)
+        if exists(filepath):
+            return filepath
+        else:
+            raise FileNotFoundError
+
 
 class AwsS3(FileManager):
     def __init__(self) -> None:
         self.s3 = boto3.resource('s3')
         self.bucket = self.s3.Bucket(BUCKET)
+
+    def return_file(self, filename, userId):
+        key = self._get_filename(filename, userId)
+        return self.s3.generate_presigned_url('get_object',
+                                              Params={'Bucket': BUCKET,
+                                                      'Key': key},
+                                              ExpiresIn=3600)
 
     def save_file(self, file_upload, filename, userId):
         key = self._get_filename(filename, userId)
