@@ -38,6 +38,9 @@ fileManager = FileManager.get_instance()
 def get_target_name(task):
     return os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
 
+class VistaHealthCheck(Resource):
+    def get():
+        return 200
 
 class VistaTasks(Resource):
     @jwt_required()

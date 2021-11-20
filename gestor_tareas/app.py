@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_restful import Api
-from vistas import VistaTasks, VistaUpdateTask, VistaGetFiles, VistaTask
+from vistas import VistaTasks, VistaUpdateTask, VistaGetFiles, VistaTask, VistaHealthCheck
 from modelos import db
 from flask_jwt_extended import JWTManager
 import os
@@ -23,6 +23,7 @@ db.init_app(app)
 db.create_all()
 
 api = Api(app)
+api.add_resource(VistaHealthCheck, '/healthCheck')
 api.add_resource(VistaTasks, '/tasks')
 api.add_resource(VistaTask, '/tasks/<int:id_task>')
 api.add_resource(VistaUpdateTask, '/updateTask')
