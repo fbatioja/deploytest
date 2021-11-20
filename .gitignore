@@ -36,3 +36,6 @@ htmlcov/
 /converter-worker/ven/
 .vs/
 .vs/slnx.sqlite
+
+ssh-nodo-bastion.pem
+ssh-nodo-web.pem
