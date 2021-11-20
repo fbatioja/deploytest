@@ -7,6 +7,7 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 import os
+import datetime
 
 app = Flask(__name__)
 
@@ -20,6 +21,7 @@ app.logger.info(dbHost)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameSecurityms}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = datetime.timedelta(hours=24)
 app.config['PROPAGATE_EXCEPTIONS'] = True
 
 app_context = app.app_context()
