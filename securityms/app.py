@@ -63,6 +63,7 @@ def post():
         if new_user.password == new_user.password2:
             db.session.add(new_user)
             db.session.commit()
+            db.session.close()
             additional_claims = {"email": new_user.email}
             access_token = create_access_token(identity={"id": new_user.id, "email": new_user.email},
                                                additional_claims=additional_claims)
