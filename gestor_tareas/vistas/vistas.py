@@ -73,6 +73,7 @@ class VistaTasks(Resource):
                                          "userId": userId,
                                          "taskId": nueva_task.id,
                                          "timecreated": tiempo})
+            db.session.close()
             return {"task": task_schema.dump(nueva_task), "cola": r.id}, 200
         except Exception:
             db.session.rollback()
@@ -118,8 +119,9 @@ class VistaTask(Resource):
         task = Task.query.filter_by(id=id_task, userEmail=jwtHeader["email"])
         if task is None:
             return None, 404
-
-        return tasks_schema.dump(task), 200
+        taskDump = tasks_schema.dump(task)
+        db.session.close()
+        return taskDump, 200
 
     @jwt_required()
     def put(self, id_task):
@@ -156,7 +158,9 @@ class VistaTask(Resource):
                                      "userId": userId,
                                      "taskId": task.id,
                                      "timecreated": tiempo})
-        return tasks_schema.dump([task]), 200
+        taskDump = tasks_schema.dump([task])
+        db.session.close()
+        return taskDump, 200
 
     @jwt_required()
     def delete(self, id_task):
@@ -167,6 +171,7 @@ class VistaTask(Resource):
 
         task = Task.query.filter_by(id=id_task, userEmail=userEmail).first()
         if task is None:
+            db.session.close()
             return None, 404
 
         if task.status != Status.PROCESSED:
@@ -176,10 +181,12 @@ class VistaTask(Resource):
         fileprocessed = os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
         response = remove_file(fileoriginal, userId)
         if response != "OK":
+            db.session.close()
             return response, 500
 
         response = remove_file(fileprocessed, userId)
         if response != "OK":
+            db.session.close()
             return response, 500
 
         Task.query.filter_by(id=id_task, userEmail=userEmail).delete()
@@ -191,6 +198,7 @@ class VistaTask(Resource):
             raise
             return "Ocurrió un error al eliminar la tarea", 500
 
+        db.session.close()
         return 'Tarea eliminada', 200
 
 
@@ -253,5 +261,6 @@ class VistaUpdateTask(Resource):
                 server.quit()
         except Exception as e:
             print(e)
-
+        finally:
+            db.session.close()
         return 'email enviado', 200
