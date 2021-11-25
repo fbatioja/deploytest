@@ -66,7 +66,6 @@ class VistaTasks(Resource):
                               userEmail=userEmail)
             db.session.add(nueva_task)
             db.session.commit()
-            db.session.close()
             r = celery_app.send_task('tasks.convert_task',
                                      kwargs={
                                          'filename': file.filename,
@@ -144,7 +143,6 @@ class VistaTask(Resource):
 
         try:
             db.session.commit()
-            db.session.close()
         except:
             db.session.rollback()
             db.session.close()
@@ -187,7 +185,6 @@ class VistaTask(Resource):
         Task.query.filter_by(id=id_task, userEmail=userEmail).delete()
         try:
             db.session.commit()
-            db.session.close()
         except:
             db.session.rollback()
             db.session.close()
@@ -203,7 +200,6 @@ class VistaUpdateTask(Resource):
         task.status = "PROCESSED"
         try:
             db.session.commit()
-            db.session.close()
         except:
             db.session.rollback()
             db.session.close()
