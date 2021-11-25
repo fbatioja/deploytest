@@ -47,7 +47,9 @@ class VistaTasks(Resource):
     def get(self):
         jwtHeader = get_jwt()
         tasks = Task.query.filter(Task.userEmail == jwtHeader["email"])
-        return {"tasks": tasks_schema.dump(tasks, many=True)}, 200
+        tasksDump = tasks_schema.dump(tasks, many=True)
+        db.session.close()
+        return {"tasks": tasksDump}, 200
 
     @jwt_required()
     def post(self):
@@ -73,8 +75,9 @@ class VistaTasks(Resource):
                                          "userId": userId,
                                          "taskId": nueva_task.id,
                                          "timecreated": tiempo})
+            taskDump = task_schema.dump(nueva_task)
             db.session.close()
-            return {"task": task_schema.dump(nueva_task), "cola": r.id}, 200
+            return {"task": taskDump, "cola": r.id}, 200
         except Exception:
             db.session.rollback()
             db.session.close()
