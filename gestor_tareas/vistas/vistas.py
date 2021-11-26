@@ -24,12 +24,11 @@ smt_port = int(os.environ["SMTP_EMAIL_PORT"])
 sender_email = os.environ["SMTP_EMAIL_SENDER_EMAIL"]
 password = os.environ["SMTP_EMAIL_SENDER_PASSWORD"]
 
-rabbit_user = os.environ["RABBITMQ_DEFAULT_USER"]
-rabbit_password = os.environ["RABBITMQ_DEFAULT_PASS"]
-rabbit_hostname = os.environ["RABBITMQ_HOSTNAME"]
+access_key = os.environ["AWS_ACCESS_KEY"]
+secret_key = os.environ["AWS_SECRET_KEY"]
 
 celery_app = Celery('gestor',
-                    broker=f"amqp://{rabbit_user}:{rabbit_password}@{rabbit_hostname}:5672",
+                    broker=f"sqs://{acces_key}:{secret_key}@",
                     backend='rpc://')
 
 fileManager = FileManager.get_instance()
