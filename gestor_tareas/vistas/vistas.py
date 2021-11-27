@@ -46,7 +46,9 @@ class VistaTasks(Resource):
     def get(self):
         jwtHeader = get_jwt()
         tasks = Task.query.filter(Task.userEmail == jwtHeader["email"])
-        return {"tasks": tasks_schema.dump(tasks, many=True)}, 200
+        tasksDump = tasks_schema.dump(tasks, many=True)
+        db.session.close()
+        return {"tasks": tasksDump}, 200
 
     @jwt_required()
     def post(self):
@@ -72,9 +74,13 @@ class VistaTasks(Resource):
                                          "userId": userId,
                                          "taskId": nueva_task.id,
                                          "timecreated": tiempo})
-            return {"task": task_schema.dump(nueva_task), "cola": r.id}, 200
+            taskDump = task_schema.dump(nueva_task)
+            db.session.close()
+            return {"task": taskDump, "cola": r.id}, 200
         except Exception:
-            return "Ocurrió un error al guardar el archivo", 400
+            db.session.rollback()
+            db.session.close()
+            return "Ocurrió un error al guardar el archivo", 500
 
 
 def remove_file(filename, userid):
@@ -114,8 +120,9 @@ class VistaTask(Resource):
         task = Task.query.filter_by(id=id_task, userEmail=jwtHeader["email"])
         if task is None:
             return None, 404
-
-        return tasks_schema.dump(task), 200
+        taskDump = tasks_schema.dump(task)
+        db.session.close()
+        return taskDump, 200
 
     @jwt_required()
     def put(self, id_task):
@@ -132,11 +139,17 @@ class VistaTask(Resource):
         newFormat = request.json.get("newFormat")
         oldTarget = get_target_name(task)
         task.newFormat = newFormat  # Actualiza el formato de la tarea
-        db.session.commit()
+
         if task.status == Status.PROCESSED:
             remove_file(oldTarget, userId)
             task.status = Status.UPLOADED
+
+        try:
             db.session.commit()
+        except:
+            db.session.rollback()
+            db.session.close()
+            return "Ocurrió un error al actualizar el formato", 500
 
         r = celery_app.send_task('tasks.convert_task',
                                  kwargs={
@@ -145,7 +158,9 @@ class VistaTask(Resource):
                                      "userId": userId,
                                      "taskId": task.id,
                                      "timecreated": tiempo})
-        return tasks_schema.dump([task]), 200
+        taskDump = tasks_schema.dump([task])
+        db.session.close()
+        return taskDump, 200
 
     @jwt_required()
     def delete(self, id_task):
@@ -156,6 +171,7 @@ class VistaTask(Resource):
 
         task = Task.query.filter_by(id=id_task, userEmail=userEmail).first()
         if task is None:
+            db.session.close()
             return None, 404
 
         if task.status != Status.PROCESSED:
@@ -165,14 +181,23 @@ class VistaTask(Resource):
         fileprocessed = os.path.splitext(task.filename)[0] + '.' + task.newFormat.name.lower()
         response = remove_file(fileoriginal, userId)
         if response != "OK":
+            db.session.close()
             return response, 500
 
         response = remove_file(fileprocessed, userId)
         if response != "OK":
+            db.session.close()
             return response, 500
 
         Task.query.filter_by(id=id_task, userEmail=userEmail).delete()
-        db.session.commit()
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            db.session.close()
+            return "Ocurrió un error al eliminar la tarea", 500
+
+        db.session.close()
         return 'Tarea eliminada', 200
 
 
@@ -180,7 +205,12 @@ class VistaUpdateTask(Resource):
     def post(self):
         task = Task.query.get_or_404(request.json["taskId"])
         task.status = "PROCESSED"
-        db.session.commit()
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            db.session.close()
+            return "Ocurrió un error al actualizar el estado de la tarea", 500
 
         if not smtp_enable:
             return 'email deshabilitado', 200
@@ -229,5 +259,6 @@ class VistaUpdateTask(Resource):
                 server.quit()
         except Exception as e:
             print(e)
-
+        finally:
+            db.session.close()
         return 'email enviado', 200
