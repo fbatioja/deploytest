@@ -1,7 +1,9 @@
 FROM python:3.7-alpine
 
 RUN apk add --no-cache gcc musl-dev linux-headers\
-    && pip install --upgrade pip
+    && pip install --upgrade pip\
+    && apk add --no-cache --virtual .build-dependencies build-base curl-dev \
+    && pip install pycurl
 
 RUN apk add build-base
 

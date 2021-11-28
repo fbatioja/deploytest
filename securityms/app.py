@@ -66,11 +66,15 @@ def post():
             additional_claims = {"email": new_user.email}
             access_token = create_access_token(identity={"id": new_user.id, "email": new_user.email},
                                                additional_claims=additional_claims)
+            db.session.close()
             return {"message": "User created sucessfully", "token": access_token}
         else:
+            db.session.close()
             return {"message": "Password and password2 fields doesn't match, please correct it and try again"}
     else:
-        return {"message": "User with email {} is already created".format(new_user.email)}
+        email = new_user.email
+        db.session.close()
+        return {"message": "User with email {} is already created".format(email)}
 
 
 @app.route('/login', methods=['POST'])
@@ -84,7 +88,9 @@ def postAuth():
         additional_claims = {"email": user.email}
         access_token = create_access_token(identity={"id": user.id, "email": user.email},
                                            additional_claims=additional_claims)
-        return {"message": "Sucessfull login", "token": access_token, "user": usuario_schema.dump(user)}
+        userDump = usuario_schema.dump(user)
+        db.session.close()
+        return {"message": "Sucessfull login", "token": access_token, "user": userDump}
 
 
 @app.route('/validate', methods=['GET'])
