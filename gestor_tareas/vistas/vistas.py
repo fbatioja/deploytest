@@ -20,13 +20,13 @@ tasks_schema = TaskSchema(many=True)
 usuario_schema = UsuarioSchema()
 
 smtp_enable = os.environ.get('SMTP_enable', False)
-smtp_server = os.environ["SMTP_EMAIL_SERVER"]
-smt_port = int(os.environ["SMTP_EMAIL_PORT"])
-sender_email = os.environ["SMTP_EMAIL_SENDER_EMAIL"]
-password = os.environ["SMTP_EMAIL_SENDER_PASSWORD"]
+smtp_server = os.environ.get("SMTP_EMAIL_SERVER")
+smt_port = int(os.environ.get("SMTP_EMAIL_PORT", 0))
+sender_email = os.environ.get("SMTP_EMAIL_SENDER_EMAIL")
+password = os.environ.get("SMTP_EMAIL_SENDER_PASSWORD")
 
-queue_url = os.environ["SQS_QUEUE_URL"]
-queue_name = os.environ["SQS_QUEUE_NAME"]
+queue_url = os.environ.get("SQS_QUEUE_URL", '')
+queue_name = os.environ.get("SQS_QUEUE_NAME", '')
 
 celery_app = Celery('gestor',
                     broker=f"sqs://{queue_url}",
