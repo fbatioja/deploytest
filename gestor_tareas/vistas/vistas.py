@@ -4,7 +4,7 @@ from flask import request, send_file
 from flask_restful import Resource
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_jwt_extended.utils import get_jwt, create_access_token
-from modelos import db, Task, TaskSchema, Status, User, UsuarioSchema
+from ..modelos import db, Task, TaskSchema, Status, User, UsuarioSchema
 from celery import Celery
 import os
 import time
@@ -13,7 +13,7 @@ import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from util import FileManager, AwsS3
+from ..util import FileManager, AwsS3
 
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)

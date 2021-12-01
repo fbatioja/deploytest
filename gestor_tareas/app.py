@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api
-from vistas import VistaTasks, VistaUpdateTask, VistaGetFiles, VistaTask, VistaHealthCheck, VistaLogIn, VistaSignUp
-from modelos import db
+from .vistas import VistaTasks, VistaUpdateTask, VistaGetFiles, VistaTask, VistaHealthCheck, VistaLogIn, VistaSignUp
+from .modelos import db
 from flask_jwt_extended import JWTManager
 import os
 
