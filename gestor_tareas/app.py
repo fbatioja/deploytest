@@ -25,6 +25,7 @@ app_context.push()
 
 db.init_app(app)
 db.create_all()
+db.session.close()
 
 api = Api(app)
 api.add_resource(VistaHealthCheck, '/healthCheck')
