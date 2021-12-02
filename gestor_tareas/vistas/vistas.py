@@ -25,13 +25,10 @@ smt_port = int(os.environ.get("SMTP_EMAIL_PORT", 0))
 sender_email = os.environ.get("SMTP_EMAIL_SENDER_EMAIL")
 password = os.environ.get("SMTP_EMAIL_SENDER_PASSWORD")
 
-queue_url = os.environ.get("SQS_QUEUE_URL", '')
-queue_name = os.environ.get("SQS_QUEUE_NAME", '')
+queue_url = os.environ.get("QUEUE_URL", '')
 
 celery_app = Celery('gestor',
-                    broker=f"sqs://{queue_url}",
-                    backend='rpc://',
-                    task_default_queue=f"{queue_name}")
+                    broker=f"{queue_url}")
 
 fileManager = FileManager.get_instance()
 

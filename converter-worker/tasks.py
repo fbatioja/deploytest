@@ -10,7 +10,7 @@ logger = get_task_logger(__name__)
 
 
 gestor_tareas_host = os.environ.get("GESTOR_TAREAS_HOST")
-queue_url = os.environ.get("SQS_QUEUE_URL")
+queue_url = os.environ.get("QUEUE_URL")
 queue_name = os.environ.get("SQS_QUEUE_NAME")
 rabbit_user = os.environ.get("RABBITMQ_DEFAULT_USER")
 rabbit_password = os.environ.get("RABBITMQ_DEFAULT_PASS")
@@ -19,9 +19,7 @@ gestor_tareas_host = os.environ.get("GESTOR_TAREAS_HOST")
 log_host = os.environ.get("LOG_HOST")
 
 app = Celery('tasks',
-             broker=f"sqs://{queue_url}",
-             backend='rpc://',
-             task_default_queue=f'{queue_name}')
+             broker=f"{queue_url}")
 
 fileManager = FileManager.get_instance()
 
