@@ -4,7 +4,7 @@ from celery.utils.log import get_task_logger
 import requests
 from pydub import AudioSegment
 import os
-from util import FileManager
+from .util import FileManager
 
 logger = get_task_logger(__name__)
 
