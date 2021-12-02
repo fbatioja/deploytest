@@ -11,12 +11,14 @@ dbHost = os.environ.get("DB_HOST")
 dbNameGestorTareas = os.environ.get("DB_NAME_GESTORTAREAS")
 dbUser = os.environ.get("DB_USER")
 dbPassword = os.environ.get("DB_PASSWORD")
+rdbms = os.environ.get("RDBMS", "mysql+pymysql")
+
 
 environment = os.environ.get("PROJECT_ENVIRONMENT")
 if environment == "develop":
     app.config['SQL_ALCHEMY_DATABASE_URI'] = 'sqlite:///gestor-tareas.db'
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{dbUser}:{dbPassword}@{dbHost}/{dbNameGestorTareas}"
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"{rdbms}://{dbUser}:{dbPassword}@{dbHost}/{dbNameGestorTareas}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ["JWT_SECRET_KEY"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
