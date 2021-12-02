@@ -292,8 +292,8 @@ class VistaLogIn(Resource):
         user = User.query.filter(
             User.username == request.json["username"] and User.password == request.json["password"]).first()
         db.session.commit()
-        db.session.close()
         if user is None:
+            db.session.close()
             return "User doesn't exists", 404
         else:
             additional_claims = {"email": user.email}
