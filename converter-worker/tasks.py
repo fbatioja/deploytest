@@ -31,7 +31,7 @@ def convert_task(filename, newFormat, userId, taskId, timecreated):
     logger.info(f'Solicitud de conversión - {filename} a {newFormat}')
     resp = convert_validation(filename, newFormat, userId)
     timeend = round(time.time())
-    requests.post(f"{log_host}/logTransaction", json={"taskId": taskId,"timecreated": timecreated,"timestart": timestart,"diff": diff,"timeend": timeend})
+    #requests.post(f"{log_host}/logTransaction", json={"taskId": taskId,"timecreated": timecreated,"timestart": timestart,"diff": diff,"timeend": timeend})
     if resp:
         logger.info(f"Conversión de archvio {filename} a {newFormat}")
         requests.post(f"{gestor_tareas_host}/updateTask",
@@ -42,6 +42,7 @@ def convert_validation(filename, newFormat, userId):
     filenameSplit = filename.split(".")
     extencion = filenameSplit[len(filenameSplit) - 1]
     if extencion in ['mp3', 'aac', 'wav', 'wma', 'ogg']:
+        logger.info(f'pre audio convert')
         return audio_convert(filename, newFormat, userId)
     else:
         logger.info(f'El archivo con extención {extencion} no es soportado')
@@ -61,6 +62,7 @@ def audio_convert(filename, newFormat, userId):
             AudioSegment.from_mp3(source_path).export(
                 destination_path, format=newFormat)
         elif extencion == "ogg":
+            logger.info(f'pre audio ogg')
             AudioSegment.from_ogg(source_path).export(
                 destination_path, format=newFormat)
         elif extencion == "wav":
@@ -73,5 +75,6 @@ def audio_convert(filename, newFormat, userId):
         fileManager.clean_local_files(userId)
         return False
 
+    logger.info(f'send file')
     fileManager.send_file(destination_path, target_name, userId)
     return True
