@@ -3,8 +3,8 @@ import json
 from flask import request, send_file
 from flask_restful import Resource
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from flask_jwt_extended.utils import get_jwt
-from modelos import db, Task, TaskSchema, Status
+from flask_jwt_extended.utils import get_jwt, create_access_token
+from ..modelos import db, Task, TaskSchema, Status, User, UsuarioSchema
 from celery import Celery
 import os
 import time
@@ -13,24 +13,22 @@ import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from util import FileManager, AwsS3
+from ..util import FileManager, AwsS3
 
 task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
+usuario_schema = UsuarioSchema()
 
 smtp_enable = os.environ.get('SMTP_enable', False)
-smtp_server = os.environ["SMTP_EMAIL_SERVER"]
-smt_port = int(os.environ["SMTP_EMAIL_PORT"])
-sender_email = os.environ["SMTP_EMAIL_SENDER_EMAIL"]
-password = os.environ["SMTP_EMAIL_SENDER_PASSWORD"]
+smtp_server = os.environ.get("SMTP_EMAIL_SERVER")
+smt_port = int(os.environ.get("SMTP_EMAIL_PORT", 0))
+sender_email = os.environ.get("SMTP_EMAIL_SENDER_EMAIL")
+password = os.environ.get("SMTP_EMAIL_SENDER_PASSWORD")
 
-queue_url = os.environ["SQS_QUEUE_URL"]
-queue_name = os.environ["SQS_QUEUE_NAME"]
+queue_url = os.environ.get("QUEUE_URL", '')
 
 celery_app = Celery('gestor',
-                    broker=f"sqs://{queue_url}",
-                    backend='rpc://',
-                    task_default_queue=f"{queue_name}")
+                    broker=f"{queue_url}")
 
 fileManager = FileManager.get_instance()
 
@@ -67,7 +65,7 @@ class VistaTasks(Resource):
                               userEmail=userEmail)
             db.session.add(nueva_task)
             db.session.commit()
-            r = celery_app.send_task('tasks.convert_task',
+            r = celery_app.send_task('convert_task',
                                      kwargs={
                                          'filename': file.filename,
                                          "newFormat": request.form.get("newFormat"),
@@ -80,6 +78,7 @@ class VistaTasks(Resource):
         except Exception:
             db.session.rollback()
             db.session.close()
+            raise
             return "Ocurrió un error al guardar el archivo", 500
 
 
@@ -262,3 +261,43 @@ class VistaUpdateTask(Resource):
         finally:
             db.session.close()
         return 'email enviado', 200
+
+class VistaSignUp(Resource):
+    def post(self):
+        new_user = User(username=request.json["username"], password=request.json["password"],
+                        password2=request.json["password2"], email=request.json["email"])
+        user = User.query.filter(User.email == new_user.email).first()
+        if user is None:
+            if new_user.password == new_user.password2:
+                db.session.add(new_user)
+                db.session.commit()
+                additional_claims = {"email": new_user.email}
+                access_token = create_access_token(identity={"id": new_user.id, "email": new_user.email},
+                                                   additional_claims=additional_claims)
+                db.session.close()
+                return {"message": "User created sucessfully", "token": access_token}
+            else:
+                db.session.close()
+                return {"message": "Password and password2 fields doesn't match, please correct it and try again"}
+        else:
+            email = new_user.email
+            db.session.close()
+            return {"message": "User with email {} is already created".format(email)}
+
+class VistaLogIn(Resource):
+    def post(self):
+        user = User.query.filter(
+            User.username == request.json["username"] and User.password == request.json["password"]).first()
+        db.session.commit()
+        if user is None:
+            db.session.close()
+            return "User doesn't exists", 404
+        else:
+            additional_claims = {"email": user.email}
+            access_token = create_access_token(identity={"id": user.id, "email": user.email},
+                                               additional_claims=additional_claims)
+            userDump = usuario_schema.dump(user)
+            db.session.close()
+            return {"message": "Sucessfull login", "token": access_token, "user": userDump}
+
+

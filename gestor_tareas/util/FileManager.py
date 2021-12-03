@@ -4,7 +4,6 @@ import shutil
 from abc import abstractmethod, ABC
 from os.path import exists
 import boto3
-import magic
 
 BUCKET = os.environ.get("BUCKET", '')
 
