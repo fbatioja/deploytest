@@ -24,7 +24,7 @@ app = Celery('tasks',
 fileManager = FileManager.get_instance()
 
 
-@app.tasks()
+@app.task(name='convert_task')
 def convert_task(filename, newFormat, userId, taskId, timecreated):
     timestart = round(time.time())
     diff = timestart - timecreated
