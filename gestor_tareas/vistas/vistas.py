@@ -65,7 +65,7 @@ class VistaTasks(Resource):
                               userEmail=userEmail)
             db.session.add(nueva_task)
             db.session.commit()
-            r = celery_app.send_task('converter-worker.tasks.convert_task',
+            r = celery_app.send_task('convert_task',
                                      kwargs={
                                          'filename': file.filename,
                                          "newFormat": request.form.get("newFormat"),
