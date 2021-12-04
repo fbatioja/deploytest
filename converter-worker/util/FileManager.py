@@ -84,9 +84,9 @@ class AwsS3(FileManager):
     def return_file(self, filename, userId):
         key = self._get_filename(filename, userId)
         return self.s3_client.generate_presigned_url('get_object',
-                                              Params={'Bucket': BUCKET,
-                                                      'Key': key},
-                                              ExpiresIn=3600)
+                                                     Params={'Bucket': BUCKET,
+                                                             'Key': key},
+                                                     ExpiresIn=3600)
 
     def save_file(self, file_upload, filename, userId):
         key = self._get_filename(filename, userId)
@@ -112,8 +112,15 @@ class AwsS3(FileManager):
         return filepath
 
     def send_file(self, filepath, filename, userId):
-        self.save_file(open(filepath, 'rb'), filename, userId)
+        f = open(filepath, 'rb')
+        self.save_file(f, filename, userId)
+        f.close()
         self.clean_local_files(userId)
 
     def clean_local_files(self, userId):
+        l = os.listdir(f"./{self.path}/{userId}/")
+        print("/n".join(l))
         shutil.rmtree(f"./{self.path}/{userId}/")
+        l = os.listdir(f"./{self.path}/{userId}/")
+        print("--------------========")
+        print("/n".join(l))
