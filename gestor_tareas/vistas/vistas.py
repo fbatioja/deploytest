@@ -150,7 +150,7 @@ class VistaTask(Resource):
             db.session.close()
             return "Ocurrió un error al actualizar el formato", 500
 
-        r = celery_app.send_task('tasks.convert_task',
+        r = celery_app.send_task('convert_task',
                                  kwargs={
                                      'filename': task.filename,
                                      "newFormat": newFormat,
