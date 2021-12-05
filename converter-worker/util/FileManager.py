@@ -121,6 +121,6 @@ class AwsS3(FileManager):
         l = os.listdir(f"./{self.path}/{userId}/")
         self.logger.info("/n".join(l))
         shutil.rmtree(f"./{self.path}/{userId}/")
-        l = os.listdir(f"./{self.path}/{userId}/")
+        l = os.listdir(f"./{self.path}/")
         self.logger.info("--------------========")
         self.logger.info("/n".join(l))
