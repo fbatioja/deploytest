@@ -76,5 +76,6 @@ def audio_convert(filename, newFormat, userId):
         return False
 
     logger.info(f'send file')
+    fileManager.logger = logger
     fileManager.send_file(destination_path, target_name, userId)
     return True

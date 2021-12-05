@@ -119,8 +119,8 @@ class AwsS3(FileManager):
 
     def clean_local_files(self, userId):
         l = os.listdir(f"./{self.path}/{userId}/")
-        print("/n".join(l))
+        self.logger.info("/n".join(l))
         shutil.rmtree(f"./{self.path}/{userId}/")
         l = os.listdir(f"./{self.path}/{userId}/")
-        print("--------------========")
-        print("/n".join(l))
+        self.logger.info("--------------========")
+        self.logger.info("/n".join(l))
